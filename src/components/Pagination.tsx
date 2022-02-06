@@ -15,14 +15,6 @@ const PaginationContainer = styled.div`
     }
   }
 
-  > div:nth-child(2) {
-    display: flex;
-
-    > a {
-      margin: 0 6px;
-    }
-  }
-
   > div:last-child {
     > a {
       margin-left: 6px;
@@ -30,9 +22,17 @@ const PaginationContainer = styled.div`
   }
 `;
 
+const PageContainer = styled.div`
+  display: flex;
+
+  > a {
+    margin: 0 6px;
+  }
+`;
+
 interface LinkProps {
   activate: boolean;
-  onClick: (e: React.MouseEvent<HTMLAnchorElement>) => void;
+  onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void;
   'data-page'?: number;
 }
 
@@ -71,6 +71,7 @@ interface PaginationProps {
   onMove: (pageNum: number, pageIndex?: number) => void;
 }
 
+// TODO: 페이지네이션 초기화 문제: 현재 인덱스 여기서 분리 필요
 function Pagination({ totalCount, onMove }: PaginationProps) {
   const [current, setCurrent] = useState(0);
   const last = useMemo(
@@ -78,12 +79,12 @@ function Pagination({ totalCount, onMove }: PaginationProps) {
     [totalCount],
   );
   const totalPages = useMemo(
-    () => [...Array(last + 1)].map((_, index) => index + 1),
+    () => (last > -1 ? [...Array(last + 1)].map((_, index) => index + 1) : []),
     [last],
   );
 
   // 테스트 로그
-  console.log('전체 페이지수', totalCount, current, last, totalPages);
+  // console.log('전체 페이지수', totalCount, current, last, totalPages);
 
   useEffect(() => {
     const root = document.getElementById('root');
@@ -92,19 +93,26 @@ function Pagination({ totalCount, onMove }: PaginationProps) {
     }
   }, [current]);
 
+  // TODO: 병합
   const handlePrev = useCallback(() => {
     if (current === 0) return;
     setCurrent((prev) => prev - 1);
-  }, [current]);
+    onMove(current, current - 1);
+  }, [current, onMove]);
 
   const handleNext = useCallback(() => {
     if (current === last) return;
     setCurrent((prev) => prev + 1);
-  }, [current, last]);
+    onMove(current + 2, current + 1);
+  }, [current, last, onMove]);
 
   const handleMove = useCallback(
-    (e: React.MouseEvent<HTMLAnchorElement>) => {
-      const target = e.target as HTMLAnchorElement;
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName !== 'A') {
+        return;
+      }
+
       setCurrent(Number(target.dataset.page) - 1);
       onMove(Number(target.dataset.page), Number(target.dataset.page) - 1);
     },
@@ -116,14 +124,14 @@ function Pagination({ totalCount, onMove }: PaginationProps) {
       <div>
         <NavLink
           tabIndex={0}
-          activate={current !== 0}
+          activate={current > 0}
           aria-label="previous"
           onClick={handlePrev}
         >
           <FontAwesomeIcon icon={faChevronLeft} />
         </NavLink>
       </div>
-      <div>
+      <PageContainer onClick={handleMove}>
         {totalPages
           .slice(
             current < 5 ? 0 : current - 4,
@@ -135,16 +143,15 @@ function Pagination({ totalCount, onMove }: PaginationProps) {
               tabIndex={0}
               activate={page === current + 1}
               data-page={page}
-              onClick={handleMove}
             >
               {page}
             </PageLink>
           ))}
-      </div>
+      </PageContainer>
       <div>
         <NavLink
           tabIndex={0}
-          activate={current !== last}
+          activate={current < last}
           aria-label="next"
           onClick={handleNext}
         >
