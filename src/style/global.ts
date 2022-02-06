@@ -9,13 +9,11 @@ const GlobalStyle = createGlobalStyle`
     padding: 0;
     outline: 0;
     box-sizing: border-box;
-    font-size: 14px;
   }
 
   html,
   body {
-    width: 100%;
-    height: 100%;
+    width: 100vw;
     background-color: #f0f1f3;
     overflow-x: hidden;
   }

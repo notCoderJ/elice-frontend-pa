@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import styled, { css } from 'styled-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -6,8 +6,10 @@ import {
   faChevronRight,
 } from '@fortawesome/free-solid-svg-icons';
 
+// 스타일 정의부
 const PaginationContainer = styled.div`
   display: flex;
+  width: fit-content;
 
   > div:first-child {
     > a {
@@ -47,12 +49,23 @@ const linkStyle = css`
 `;
 
 const NavLink = styled.a<LinkProps>`
-  color: ${(props) => (props.activate ? '#222' : '#ccc')};
   ${linkStyle};
+  color: #ccc;
+  cursor: not-allowed;
+
+  ${(props) =>
+    props.activate &&
+    css`
+      color: #222;
+      cursor: pointer;
+    `}
 `;
 
-const PageLink = styled(NavLink)`
+const PageLink = styled.a<LinkProps>`
+  ${linkStyle};
+  font-size: 14px;
   color: #999;
+  transition: background-color 0.5s ease;
 
   ${(props) =>
     props.activate &&
@@ -60,32 +73,24 @@ const PageLink = styled(NavLink)`
       background: #524fa1;
       color: white;
     `};
+
+  :hover {
+    background-color: transparent;
+    color: #524fa1;
+    font-weight: 700;
+  }
 `;
 
-// TODO: 페이지 최대 4개 표시 요구사항이 이게 아닌듯 한데... 문의 필요.
+// TODO: 페이지 최대 4개 표시 요구사항이 이게 아닌듯 한데... 답변 대기중.
 // 컴포넌트 구현부
-const COUNT_PER_PAGE = 20;
-
 interface PaginationProps {
-  totalCount: number;
+  current: number;
+  last: number;
+  totalPages: number[];
   onMove: (pageNum: number, pageIndex?: number) => void;
 }
 
-// TODO: 페이지네이션 초기화 문제: 현재 인덱스 여기서 분리 필요
-function Pagination({ totalCount, onMove }: PaginationProps) {
-  const [current, setCurrent] = useState(0);
-  const last = useMemo(
-    () => Math.ceil(totalCount / COUNT_PER_PAGE) - 1,
-    [totalCount],
-  );
-  const totalPages = useMemo(
-    () => (last > -1 ? [...Array(last + 1)].map((_, index) => index + 1) : []),
-    [last],
-  );
-
-  // 테스트 로그
-  // console.log('전체 페이지수', totalCount, current, last, totalPages);
-
+function Pagination({ current, last, totalPages, onMove }: PaginationProps) {
   useEffect(() => {
     const root = document.getElementById('root');
     if (root) {
@@ -93,16 +98,13 @@ function Pagination({ totalCount, onMove }: PaginationProps) {
     }
   }, [current]);
 
-  // TODO: 병합
   const handlePrev = useCallback(() => {
     if (current === 0) return;
-    setCurrent((prev) => prev - 1);
     onMove(current, current - 1);
   }, [current, onMove]);
 
   const handleNext = useCallback(() => {
     if (current === last) return;
-    setCurrent((prev) => prev + 1);
     onMove(current + 2, current + 1);
   }, [current, last, onMove]);
 
@@ -113,7 +115,6 @@ function Pagination({ totalCount, onMove }: PaginationProps) {
         return;
       }
 
-      setCurrent(Number(target.dataset.page) - 1);
       onMove(Number(target.dataset.page), Number(target.dataset.page) - 1);
     },
     [onMove],

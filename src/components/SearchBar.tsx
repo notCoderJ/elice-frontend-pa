@@ -33,6 +33,7 @@ const Textbox = styled.div<TextboxProps>`
     background-color: transparent;
 
     ::placeholder {
+      font-size: 14px;
       margin: 12px 0;
       color: gray;
     }
@@ -67,9 +68,6 @@ function SearchBar() {
       setSearchParams(searchParams);
     }, 300)(e.target.value);
   };
-
-  // 리렌더링 테스트 로그
-  console.log('search bar');
 
   return (
     <Textbox activate={activate}>
