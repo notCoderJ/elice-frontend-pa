@@ -1,9 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useLocation, useSearchParams } from 'react-router-dom';
+import { createSearchParams, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
 import useFetchApi from '../hooks/useFetchApi';
-import { CourseCard, Pagination } from '../components';
-import ImageBox from '../components/ImageBox';
+import { CourseCard, Pagination, ImageBox } from '../components';
 import { CardInfo } from '../interface/card';
 import { Price } from '../interface/query';
 import { COUNT_PER_PAGE } from '../constants';
@@ -36,9 +35,9 @@ const CardsContainer = styled.div`
   gap: 16px;
   margin-top: 8px;
 
-  > div {
+  /* > div {
     flex: 1 1 296px;
-  }
+  } */
 `;
 
 const LoadingContainer = styled.div`
@@ -63,25 +62,27 @@ interface OrCondition {
 }
 
 // 필터 JSON Serialize
-const serializeFilter = (params: URLSearchParams) => {
+const serializeFilter = (query: string) => {
   const conditions: OrCondition[] = [];
+  const searchParams = createSearchParams(query);
   PARAM_LIST.forEach((param: string) => {
-    if (params.has(param)) {
+    if (searchParams.has(param)) {
       conditions.push({
-        $or: params.getAll(param).map((key: string) => PARAM_TABLE[param][key]),
+        $or: searchParams
+          .getAll(param)
+          .map((key: string) => PARAM_TABLE[param][key]),
       });
     }
   });
 
   return JSON.stringify({
-    $and: [{ title: `%${params.get('keyword') || ''}%` }, ...conditions],
+    $and: [{ title: `%${searchParams.get('keyword') || ''}%` }, ...conditions],
   });
 };
 
 // 컴포넌트 구현부
 function Body() {
   const { search } = useLocation();
-  const [searchParams] = useSearchParams(search);
   const { isLoading, totalCount, data, fetchApi, cancel } = useFetchApi();
   const [current, setCurrent] = useState(0);
   const last = Math.ceil(totalCount / COUNT_PER_PAGE) - 1;
@@ -91,18 +92,17 @@ function Body() {
     [last],
   );
 
-  // TODO: 필터관련 수정 중...
   useEffect(() => {
     setCurrent(0);
-  }, [searchParams]);
+  }, [search]);
 
   useEffect(() => {
     fetchApi('/course/list/', {
-      filterConditions: serializeFilter(searchParams),
+      filterConditions: serializeFilter(search),
       offset: current,
     });
     return cancel;
-  }, [current, searchParams, fetchApi, cancel]);
+  }, [current, search, fetchApi, cancel]);
 
   const handleMove = useCallback((_, pageIndex) => {
     setCurrent(pageIndex);

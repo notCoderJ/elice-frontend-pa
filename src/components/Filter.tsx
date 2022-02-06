@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { useLocation, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import styled from 'styled-components';
 import { OptionItems } from '../interface/filter';
 import Button from './Button';
@@ -16,8 +16,7 @@ interface FilterProps {
 }
 
 function Filter({ type, options }: FilterProps) {
-  const { search } = useLocation();
-  const [searchParams, setSearchParams] = useSearchParams(search);
+  const [searchParams, setSearchParams] = useSearchParams();
   const [filteredList, setFilteredList] = useState(
     new Set(searchParams.getAll(type)),
   );
@@ -40,7 +39,7 @@ function Filter({ type, options }: FilterProps) {
       });
       setSearchParams(searchParams);
     },
-    [type, filteredList, searchParams, setSearchParams],
+    [type, searchParams, filteredList, setSearchParams],
   );
 
   return (
