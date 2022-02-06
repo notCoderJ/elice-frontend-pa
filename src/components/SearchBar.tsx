@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
-import { useLocation, useSearchParams } from 'react-router-dom';
 import styled from 'styled-components';
+import { useSearchParams } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 
@@ -55,8 +55,7 @@ const useDebounce = (): DebounceHook => {
 
 // 컴포넌트 구현부
 function SearchBar() {
-  const { search } = useLocation();
-  const [searchParams, setSearchParams] = useSearchParams(search);
+  const [searchParams, setSearchParams] = useSearchParams();
   const [inputVal, setInputVal] = useState(searchParams.get('keyword') || '');
   const [activate, setActivate] = useState(false);
   const debounce: DebounceHook = useDebounce();
