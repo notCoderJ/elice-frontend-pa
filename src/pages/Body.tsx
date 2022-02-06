@@ -32,12 +32,28 @@ const PaginationArea = styled.div`
 const CardsContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
-  margin-top: 8px;
+  margin: 4px -8px -6px -8px;
 
-  /* > div {
+  > div {
+    display: flex;
     flex: 1 1 296px;
-  } */
+    max-width: 25%;
+
+    > div {
+      width: 100%;
+      margin: 8px;
+    }
+
+    @media screen and (max-width: 1280px) {
+      max-width: 33%;
+    }
+    @media screen and (max-width: 768px) {
+      max-width: 50%;
+    }
+    @media screen and (max-width: 576px) {
+      max-width: 100%;
+    }
+  }
 `;
 
 const LoadingContainer = styled.div`
@@ -136,13 +152,14 @@ function Body() {
               <CardsContainer>
                 {data?.courses.map(
                   ({ title, description, price, logo }: CardInfo, index) => (
-                    <CourseCard
-                      key={`${title}-${index + 1}`}
-                      title={title}
-                      description={description}
-                      price={price}
-                      logo={logo}
-                    />
+                    <div key={`${title}-${index + 1}`}>
+                      <CourseCard
+                        title={title}
+                        description={description}
+                        price={price}
+                        logo={logo}
+                      />
+                    </div>
                   ),
                 )}
               </CardsContainer>
