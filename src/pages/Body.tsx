@@ -45,7 +45,7 @@ const CardsContainer = styled.div`
     }
 
     @media screen and (max-width: 1280px) {
-      max-width: 33%;
+      max-width: 33.3333%;
     }
     @media screen and (max-width: 768px) {
       max-width: 50%;
