@@ -1,6 +1,7 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useRef } from 'react';
+import axios, { CancelTokenSource } from 'axios';
 import api from '../api';
-import { Price } from '../interface/query';
+import { CardInfo } from '../interface/card';
 
 interface OptionsType {
   filterConditions?: string;
@@ -11,66 +12,71 @@ interface FetchDataType {
   (url: string, options?: OptionsType): void;
 }
 
-export interface CardInfo {
-  title: string;
-  description: string;
-  price: Price;
-}
-
 interface DataType {
-  totalCount: number;
   courses: CardInfo[];
 }
 
 const useFetchApi = () => {
+  const source = useRef<CancelTokenSource | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
   const [data, setData] = useState<DataType | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // TODO: Data count 어떻게 할지...?
-  const InitStatus = () => {
-    setData(null);
+  const initStatus = useCallback(() => {
     setError(null);
-  };
+    setData(null);
+    setIsLoading(true);
+  }, []);
 
-  const fetchApi: FetchDataType = useCallback(async (url, options) => {
-    try {
-      setIsLoading(true);
-      InitStatus();
-      const res = await api.get(url, {
-        params: {
-          filter_conditions: options?.filterConditions || '',
-          offset: (options?.offset || 0) * 20,
-          count: 20,
-        },
-      });
-
-      setIsLoading(false);
-      const { _result, ...resData } = res.data;
-      if (_result.status !== 'ok') {
-        throw new Error(resData.fail_message);
-      }
-
-      setData({
-        totalCount: resData.course_count,
-        courses: resData.courses.map((course: { [key: string]: any }) => ({
-          title: course.title,
-          description: course.short_description,
-          price: { enroll_type: course.enroll_type, is_free: course.is_free },
-        })),
-      });
-
-      // 테스트 로그
-      // console.log(res);
-    } catch (err) {
-      setError(err as string);
+  const cancel = useCallback(() => {
+    if (source.current !== null) {
+      source.current.cancel();
+      source.current = null;
     }
   }, []);
 
-  // TODO: 미구현
-  const cancelRequest = useCallback(() => console.log('clean~'), []);
+  const fetchApi: FetchDataType = useCallback(
+    async (url, options) => {
+      try {
+        initStatus();
+        cancel();
+        source.current = axios.CancelToken.source();
 
-  return { isLoading, data, error, fetchApi, cancelRequest };
+        const res = await api.get(url, {
+          cancelToken: source.current.token,
+          params: {
+            filter_conditions: options?.filterConditions || '',
+            offset: (options?.offset || 0) * 20,
+            count: 20,
+          },
+        });
+
+        const { _result, ...resData } = res.data;
+        if (_result.status !== 'ok') {
+          throw new Error(resData.fail_message);
+        }
+
+        setTotalCount(resData.course_count);
+        setData({
+          courses: resData.courses.map((course: { [key: string]: any }) => ({
+            title: course.title,
+            description: course.short_description,
+            price: { enroll_type: course.enroll_type, is_free: course.is_free },
+            logo: course.logo_file_url,
+          })),
+        });
+      } catch (err) {
+        setError(err as string);
+        setTotalCount(0);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [initStatus, cancel],
+  );
+
+  return { isLoading, totalCount, data, error, fetchApi, cancel };
 };
 
 export default useFetchApi;
