@@ -12,6 +12,7 @@ const CardContainer = styled.div`
   padding: 28px 24px;
   border-radius: 8px;
   background-color: white;
+  cursor: pointer;
 
   @media screen and (max-width: 480px) {
     width: 100%;
