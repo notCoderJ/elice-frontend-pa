@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 import { useSearchParams } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -56,7 +56,7 @@ const useDebounce = (): DebounceHook => {
 // 컴포넌트 구현부
 function SearchBar() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [inputVal, setInputVal] = useState(searchParams.get('keyword') || '');
+  const [inputVal, setInputVal] = useState('');
   const [activate, setActivate] = useState(false);
   const debounce: DebounceHook = useDebounce();
 
@@ -67,6 +67,12 @@ function SearchBar() {
       setSearchParams(searchParams);
     }, 300)(e.target.value);
   };
+
+  // TODO: 라우트 관련 동작 원리 알아보기!
+  // 뒤로 가기 클릭 시 url과 입력 상태 동기화되지 않는 문제 수정
+  useEffect(() => {
+    setInputVal(searchParams.get('keyword') || '');
+  }, [searchParams]);
 
   return (
     <Textbox activate={activate}>

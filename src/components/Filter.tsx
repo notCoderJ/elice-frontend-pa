@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import styled from 'styled-components';
 import { OptionItems } from '../interface/filter';
@@ -20,6 +20,10 @@ function Filter({ type, options }: FilterProps) {
   const [filteredList, setFilteredList] = useState(
     new Set(searchParams.getAll(type)),
   );
+
+  useEffect(() => {
+    setFilteredList(new Set(searchParams.getAll(type)));
+  }, [type, searchParams]);
 
   const handleChange = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
